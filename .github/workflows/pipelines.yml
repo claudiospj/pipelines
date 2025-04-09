@@ -132,7 +132,7 @@ jobs:
       - name: Update image tag
         run: |
           if [ -d "apps" ]; then
-            sed -i "s#\(${{ inputs.repository }}:\).*#\1${{ needs.build.outputs.image-tag }}#" apps/overlay/${{ inputs.environment }}/app.yaml
+            sed -i "s#\(${{ inputs.repository }}:\).*#\1${{ needs.build.outputs.image-tag }}#" apps/overlay/${{ inputs.environment }}/${{ inputs.repository }}/app.yaml
           else
             echo "Diretório apps não existe, não foi possível atualizar a imagem."
             exit 1
@@ -153,7 +153,7 @@ jobs:
         run: |
           if [ -d "apps" ]; then
             cd apps
-            git add apps/overlay/${{ inputs.environment }}/app.yaml
+            git add apps/overlay/${{ inputs.environment }}/${{ inputs.repository }}/app.yaml
             git commit -m "Update image tag to ${{ needs.build.outputs.image-tag }} - MS: ${{ inputs.repository }} ${{ inputs.environment }}"
           else
             echo "Diretório apps não existe, não foi possível fazer o commit."
