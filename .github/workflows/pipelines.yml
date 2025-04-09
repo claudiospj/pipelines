@@ -1,0 +1,179 @@
+name: Build and Deploy Application
+
+on:
+  workflow_call:
+    inputs:
+      repository:
+        description: "Nome do repositório"
+        required: true
+        type: string  
+      environment:
+        description: "Ambiente de deploy"
+        required: true
+        type: string
+      dotnet-version:
+        description: "Versão do DotNet"
+        required: true
+        type: string        
+    secrets:
+      ENTERPRISE_GITHUB_TOKEN:
+        required: true
+      GH_TOKEN:
+        required: false
+
+
+jobs:
+  build:
+    runs-on: [ubuntu-latest]
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
+      repository-projects: write
+      attestations: write
+      id-token: write
+    outputs:
+      image-tag: ${{ steps.gitversion.outputs.SemVer }}
+
+    steps:
+      - name: Capitalização env repository
+        run: |
+          repository_lower="${{ inputs.repository }}"
+          #repository_upper=$(echo "$repository_lower" | tr '[:lower:]' '[:upper:]')
+
+          #echo "Valor em maiúsculas: $repository_upper"      
+          echo "repository_upper=`echo ${repository_lower^} `" >> $GITHUB_ENV
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0.10.2
+        with:
+          versionSpec: "5.x"
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Create GitVersion.yml
+        run: |
+          cat <<EOF > GitVersion.yml
+          assembly-versioning-scheme: MajorMinorPatch
+          mode: Mainline
+          branches:
+            main:
+              mode: ContinuousDelivery
+              tag: ""
+            develop:
+              mode: ContinuousDeployment
+              tag: "dev"
+            feature:
+              regex: feature(s)?[/-]
+              mode: ContinuousDeployment
+              tag: "{BranchName}"
+          ignore:
+            sha: []
+          EOF
+
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0.10.2
+        with:
+          useConfigFile: true
+          configFilePath: ./GitVersion.yml
+
+      - name: Version
+        run: |
+          echo Building ${{ steps.gitversion.outputs.SemVer }}
+          echo "::set-output name=image-tag::${{ steps.gitversion.outputs.SemVer }}"
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Container Image
+        run: |
+          docker build -t ghcr.io/claudiospj/${{ inputs.repository }}:${{ steps.gitversion.outputs.SemVer }} .
+          docker push ghcr.io/claudiospj/${{ inputs.repository }}:${{ steps.gitversion.outputs.SemVer }}
+
+      - name: Create Release
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: '${{ steps.gitversion.outputs.SemVer }}',              
+              name: 'Release ${{ steps.gitversion.outputs.SemVer }}',
+              draft: false,
+              prerelease: false,
+              generate_release_notes: true
+            })
+
+  deploy-gitops:
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: $${{ steps.set_var.outputs.image-tag }}
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    needs: [build]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0.10.2
+        with:
+          versionSpec: "5.x"
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          repository: 'https://github.com/claudiospj/gitops'
+
+      - name: Update image tag
+        run: |
+          if [ -d "apps" ]; then
+            cd apps
+            sed -i "s#\(${{ inputs.repository }}:\).*#\1${{ needs.build.outputs.image-tag }}#" apps/overlay/${{ inputs.environment }}/${{ inputs.repository }}/app.yaml
+          else
+            echo "Diretório apps não existe, não foi possível atualizar a imagem."
+            exit 1
+          fi
+
+      - name: Configure Git
+        run: |
+          if [ -d "apps" ]; then
+            cd apps
+            git config --global user.name 'github-actions[bot]'
+            git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          else
+            echo "Diretório apps não existe, não foi possível configurar o git."
+            exit 1
+          fi        
+
+      - name: Commit changes
+        run: |
+          if [ -d "apps" ]; then
+            cd apps
+            git add apps/overlay/${{ inputs.environment }}/bm-${{ inputs.repository }}/app.yaml
+            git commit -m "Update image tag to ${{ needs.build.outputs.image-tag }} - MS: bm-${{ inputs.repository }} Dev"
+          else
+            echo "Diretório apps não existe, não foi possível fazer o commit."
+            exit 1
+          fi          
+
+      - name: Push/Deploy changes
+        run: |
+          if [ -d "apps" ]; then
+            cd apps
+            git push
+            sleep 5
+          else
+            echo "Diretório apps não existe, não foi possível fazer o push."
+            exit 1
+          fi           
