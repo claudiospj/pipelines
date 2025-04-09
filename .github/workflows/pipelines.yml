@@ -153,7 +153,7 @@ jobs:
         run: |
           if [ -d "apps" ]; then
             cd apps
-            git add apps/overlay/${{ inputs.environment }}/${{ inputs.repository }}/app.yaml
+            git add apps/overlay/${{ inputs.environment }}/`echo ${{ inputs.repository }} | cut -d/ -f2`/app.yaml
             git commit -m "Update image tag to ${{ needs.build.outputs.image-tag }} - MS: ${{ inputs.repository }} ${{ inputs.environment }}"
           else
             echo "Diretório apps não existe, não foi possível fazer o commit."
