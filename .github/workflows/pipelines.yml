@@ -132,7 +132,6 @@ jobs:
       - name: Update image tag
         run: |
           if [ -d "apps" ]; then
-            cd apps
             sed -i "s#\(${{ inputs.repository }}:\).*#\1${{ needs.build.outputs.image-tag }}#" apps/overlay/${{ inputs.environment }}/app.yaml
           else
             echo "Diretório apps não existe, não foi possível atualizar a imagem."
