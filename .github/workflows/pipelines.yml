@@ -10,11 +10,7 @@ on:
       environment:
         description: "Ambiente de deploy"
         required: true
-        type: string
-      dotnet-version:
-        description: "Versão do DotNet"
-        required: true
-        type: string        
+        type: string    
     secrets:
       GH_TOKEN:
         required: false
