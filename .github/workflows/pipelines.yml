@@ -13,7 +13,7 @@ on:
         type: string    
     secrets:
       GH_TOKEN:
-        required: false
+        required: true
 
 
 jobs:
@@ -141,8 +141,8 @@ jobs:
       - name: Configure Git
         run: |
           if [ -d "apps" ]; then
-            git config --global user.name 'github-actions[bot]'
-            git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+            git config --global user.name 'claudiospj'
+            git config --global user.email 'claudiospj@gmail.com'
           else
             echo "Diretório apps não existe, não foi possível configurar o git."
             exit 1
@@ -161,8 +161,7 @@ jobs:
       - name: Push/Deploy changes
         run: |
           if [ -d "apps" ]; then
-            git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/claudiospj/gitops.git HEAD:main
-            sleep 5
+            git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/claudiospj/gitops.git
           else
             echo "Diretório apps não existe, não foi possível fazer o push."
             exit 1
