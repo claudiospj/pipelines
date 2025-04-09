@@ -159,11 +159,7 @@ jobs:
           fi          
 
       - name: Push/Deploy changes
-        run: |
-          if [ -d "apps" ]; then
-            git push
-            sleep 5
-          else
-            echo "Diretório apps não existe, não foi possível fazer o push."
-            exit 1
-          fi           
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
