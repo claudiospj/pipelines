@@ -16,8 +16,6 @@ on:
         required: true
         type: string        
     secrets:
-      ENTERPRISE_GITHUB_TOKEN:
-        required: true
       GH_TOKEN:
         required: false
 
