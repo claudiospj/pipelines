@@ -161,7 +161,7 @@ jobs:
       - name: Push/Deploy changes
         run: |
           if [ -d "apps" ]; then
-            git push https://x-access-token:${{ secrets.GITOPS_PAT }}@github.com/claudiospj/gitops.git HEAD:main
+            git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/claudiospj/gitops.git HEAD:main
             sleep 5
           else
             echo "Diretório apps não existe, não foi possível fazer o push."
