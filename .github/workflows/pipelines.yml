@@ -141,7 +141,6 @@ jobs:
       - name: Configure Git
         run: |
           if [ -d "apps" ]; then
-            cd apps
             git config --global user.name 'github-actions[bot]'
             git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           else
@@ -152,7 +151,6 @@ jobs:
       - name: Commit changes
         run: |
           if [ -d "apps" ]; then
-            cd apps
             git add apps/overlay/${{ inputs.environment }}/`echo ${{ inputs.repository }} | cut -d/ -f2`/app.yaml
             git commit -m "Update image tag to ${{ needs.build.outputs.image-tag }} - MS: ${{ inputs.repository }} ${{ inputs.environment }}"
           else
@@ -163,7 +161,6 @@ jobs:
       - name: Push/Deploy changes
         run: |
           if [ -d "apps" ]; then
-            cd apps
             git push
             sleep 5
           else
