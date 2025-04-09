@@ -89,8 +89,8 @@ jobs:
 
       - name: Build Container Image
         run: |
-          docker build -t ghcr.io/claudiospj/${{ inputs.repository }}:${{ steps.gitversion.outputs.SemVer }} .
-          docker push ghcr.io/claudiospj/${{ inputs.repository }}:${{ steps.gitversion.outputs.SemVer }}
+          docker build -t ghcr.io/${{ inputs.repository }}:${{ steps.gitversion.outputs.SemVer }} .
+          docker push ghcr.io/${{ inputs.repository }}:${{ steps.gitversion.outputs.SemVer }}
 
       - name: Create Release
         uses: actions/github-script@v6
@@ -127,7 +127,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          repository: 'https://github.com/claudiospj/gitops'
+          repository: 'claudiospj/gitops'
 
       - name: Update image tag
         run: |
