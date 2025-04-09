@@ -128,6 +128,7 @@ jobs:
         with:
           fetch-depth: 0
           repository: 'claudiospj/gitops'
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Update image tag
         run: |
