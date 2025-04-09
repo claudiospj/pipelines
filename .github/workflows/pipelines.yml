@@ -159,7 +159,11 @@ jobs:
           fi          
 
       - name: Push/Deploy changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: main
+        run: |
+          if [ -d "apps" ]; then
+            git push https://x-access-token:${{ secrets.GITOPS_PAT }}@github.com/claudiospj/gitops.git HEAD:main
+            sleep 5
+          else
+            echo "Diretório apps não existe, não foi possível fazer o push."
+            exit 1
+          fi           
