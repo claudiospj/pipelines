@@ -15,7 +15,7 @@ on:
         description: "Path para o Dockerfile"
         required: false
         type: string
-        default: .
+        default: ./Dockerfile
     secrets:
       GH_TOKEN:
         required: true
@@ -94,7 +94,7 @@ jobs:
 
       - name: Build Container Image
         run: |
-          docker build -t ghcr.io/${{ inputs.repository }}:${{ steps.gitversion.outputs.SemVer }} ${{ inputs.dockerfile-path }}
+          docker build -f ${{ inputs.dockerfile-path }} -t ghcr.io/${{ inputs.repository }}:${{ steps.gitversion.outputs.SemVer }} .
           docker push ghcr.io/${{ inputs.repository }}:${{ steps.gitversion.outputs.SemVer }}
 
       - name: Create Release
