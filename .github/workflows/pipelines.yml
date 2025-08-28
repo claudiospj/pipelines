@@ -65,6 +65,9 @@ jobs:
             develop:
               mode: ContinuousDeployment
               tag: "dev"
+            homolog:
+              mode: ContinuousDeployment
+              tag: "hml"
             feature:
               regex: feature(s)?[/-]
               mode: ContinuousDeployment
